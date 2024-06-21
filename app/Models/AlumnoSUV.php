@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AlumnoSGA extends Model
-{    
-    protected $connection = 'mysql2';
-    protected $table = 'persona';
-    protected $primaryKey = 'idPersona';
+class AlumnoSUV extends Model
+{
+    use HasFactory;
+    protected $connection = 'pgsql';
+    protected $table = 'alumno';
+    protected $primaryKey = 'idalumno';
     public $timestamps = false;
     protected $fillable = [];
     protected $guarded = [];
