@@ -45,12 +45,15 @@ class EgresadoController extends Controller
       $val_anio_periodo = intval($anio_periodo);
       $egresados = collect();
 
-      //return dd($collec_programa, $val_anio_periodo, $anio_periodo);
+      
+      // ENTRA A LA CONSULTA
+      if($val_anio_periodo != 0 || $collec_programa)
+      {
 
       // ************************************** SGA ***********************************************
       $subq_SGA = PerfilSGA::select(DB::raw('perfil.pfl_id, MAX(sga_matricula.mat_id) AS maxima_matricula'))->join('sga_matricula','perfil.pfl_id','sga_matricula.pfl_id')->groupBy('perfil.pfl_id');
 
-      // CONSULTA PRINCIPAL 
+      // consulta
       $egresados_SGA = PerfilSGA::select('per_nombres','per_apellidos','per_login', 'per_dni','sga_sede.sed_id','sga_sede.sed_nombre','per_mail','per_email_institucional','per_celular','per_telefono','escuela.dep_id','escuela.sdep_id', 'escuela.dep_nombre', 'sga_datos_alumno.con_id','sga_anio.ani_anio as anio_egreso', DB::raw('CONCAT(sga_anio.ani_anio,"-",sga_tanio.tan_semestre) as periodo_egreso'))
       ->joinSub($subq_SGA, 'subq_SGA', 
       function($join){
@@ -82,7 +85,7 @@ class EgresadoController extends Controller
       // ************************************** SUV ***********************************************
       $subq_SUV = AlumnoSUV::select(DB::raw('alumno.idalumno, MAX(matriculas.matricula.idmatricula) AS maxima_matricula'))->join('matriculas.matricula','alumno.idalumno','matriculas.matricula.idalumno')->groupBy('alumno.idalumno');
 
-      // CONSULTA PRINCIPAL
+      // consulta
       $egresados_SUV = AlumnoSUV::select('sistema.persona.per_nombres','sistema.persona.per_apepaterno','sistema.persona.per_apematerno','sistema.persona.per_dni', 'alumno.idalumno','alumno.idsede','patrimonio.sede.sed_descripcion','sistema.persona.per_email','sistema.persona.per_email_institucional','sistema.persona.per_celular','sistema.persona.per_telefono', 'patrimonio.estructura.idestructura',
       'patrimonio.estructura.estr_descripcion', 'matriculas.alumno.alu_estado', DB::raw('SUBSTRING(matriculas.matricula.mat_periodo,1,4) as anio_egreso'), 'matriculas.matricula.mat_periodo as periodo_egreso')
       ->joinSub($subq_SUV, 'subq_SUV', 
@@ -119,13 +122,14 @@ class EgresadoController extends Controller
         $item_bachiller = TramiteURA::select('tramite.idTipo_tramite_unidad','tramite.idEstado_tramite','cronograma_carpeta.fecha_colacion')->join('usuario','usuario.idUsuario','tramite.idUsuario')->join('programa','programa.idPrograma','tramite.idPrograma')->join('tramite_detalle','tramite_detalle.idTramite_detalle','tramite.idTramite_detalle')->join('cronograma_carpeta','tramite_detalle.idCronograma_carpeta','cronograma_carpeta.idCronograma_carpeta')->where('usuario.nro_documento',$item->per_dni)->where('programa.idSGA_PREG',$item->dep_id)->where('tramite.idTipo_tramite_unidad',15)->whereIn('tramite.idEstado_tramite',[15,44])->first();
 
         $str_sede_descripcion = URAWebsite_Sede::select('sedes.nombre')->where('idSGA_PREG',$item->sed_id)->first();
+        $str_escuela_descripcion = URAWebsite_Escuela::select('escuelas.nombre')->where('idSGA_PREG',$item->dep_id)->first();
 
         $egresados->push(
           [
           'anio_egreso' => ($item->anio_egreso),
           'periodo_egreso' => ($item->periodo_egreso),
           'sede' => ($str_sede_descripcion->nombre),
-          'escuela' => ($collec_programa->nombre),
+          'escuela' => ($str_escuela_descripcion->nombre),
           'nro_documento' => ($item->per_dni),
           'apellidos' => ($item->per_apellidos),
           'nombres' => ($item->per_nombres),
@@ -141,18 +145,20 @@ class EgresadoController extends Controller
 
       }
      
-
       // SUV
       foreach ($egresados_SUV as $key => $item){
 
         $item_bachiller = TramiteURA::select('tramite.idTipo_tramite_unidad','tramite.idEstado_tramite','cronograma_carpeta.fecha_colacion')->join('usuario','usuario.idUsuario','tramite.idUsuario')->join('programa','programa.idPrograma','tramite.idPrograma')->join('tramite_detalle','tramite_detalle.idTramite_detalle','tramite.idTramite_detalle')->join('cronograma_carpeta','tramite_detalle.idCronograma_carpeta','cronograma_carpeta.idCronograma_carpeta')->where('usuario.nro_documento',$item->per_dni)->where('programa.idSUV_PREG',$item->idestructura)->where('tramite.idTipo_tramite_unidad',15)->whereIn('tramite.idEstado_tramite',[15,44])->first();
 
+        $str_sede_descripcion = URAWebsite_Sede::select('sedes.nombre')->where('idSUV_PREG',$item->idsede)->first();
+        $str_escuela_descripcion = URAWebsite_Escuela::select('escuelas.nombre')->where('idSUV_PREG',$item->idestructura)->first();
+
         $egresados->push(
           [
           'anio_egreso' => ($item->anio_egreso),
           'periodo_egreso' => ($item->periodo_egreso),
-          'sede' => ($item->sed_descripcion),
-          'escuela' => ($collec_programa->nombre),
+          'sede' => ($str_sede_descripcion->nombre),
+          'escuela' => ($str_sede_descripcion->nombre),
           'nro_documento' => ($item->per_dni),
           'apellidos' => ($item->per_apepaterno.' '.$item->per_apematerno),
           'nombres' => ($item->per_nombres),
@@ -167,7 +173,9 @@ class EgresadoController extends Controller
           ]); 
 
       }
-     
+
+      } // Fin validacion de inputs
+
       // RESPONSE CONSULTA
       return response()->json($egresados, 200);
 
