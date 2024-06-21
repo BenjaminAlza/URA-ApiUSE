@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\AlumnoSGA;
 use App\Models\AlumnoSUV;
 use App\Models\DependenciaURA;
+use App\Models\GraduadoDIPLOMASAPP;
 use App\Models\TramiteURA;
 use App\Models\ProgramaURA;
 use App\Models\PerfilSGA;
@@ -23,6 +24,7 @@ class EgresadoController extends Controller
         return "Hola API-USE ...";
     }
 
+    //
     //METODOS API
     public function getProgramas(){
       $programas =  URAWebsite_Escuela::where('estado', '1')->get();
@@ -119,7 +121,20 @@ class EgresadoController extends Controller
       // SGA
       foreach ($egresados_SGA as $key => $item){
 
-        $item_bachiller = TramiteURA::select('tramite.idTipo_tramite_unidad','tramite.idEstado_tramite','cronograma_carpeta.fecha_colacion')->join('usuario','usuario.idUsuario','tramite.idUsuario')->join('programa','programa.idPrograma','tramite.idPrograma')->join('tramite_detalle','tramite_detalle.idTramite_detalle','tramite.idTramite_detalle')->join('cronograma_carpeta','tramite_detalle.idCronograma_carpeta','cronograma_carpeta.idCronograma_carpeta')->where('usuario.nro_documento',$item->per_dni)->where('programa.idSGA_PREG',$item->dep_id)->where('tramite.idTipo_tramite_unidad',15)->whereIn('tramite.idEstado_tramite',[15,44])->first();
+        if($val_anio_periodo >= 2023){
+          $item_bachiller = TramiteURA::select('cronograma_carpeta.fecha_colacion')->join('tramite_detalle','tramite_detalle.idTramite_detalle','tramite.idTramite_detalle')->join('cronograma_carpeta','tramite_detalle.idCronograma_carpeta','cronograma_carpeta.idCronograma_carpeta')->where('tramite.nro_matricula',$item->per_login)->where('tramite.idTipo_tramite_unidad',15)->whereIn('tramite.idEstado_tramite',[15,44])->first();
+        }
+        else{
+          $item_bachiller = GraduadoDIPLOMASAPP::select('graduado.fec_expe_d as fecha_colacion')
+          ->where('graduado.cod_alumno', $item->per_login)
+          ->where(function($query)
+          {
+              $query->where('graduado.tipo_ficha',1)
+              ->orWhere('graduado.tipo_ficha',7);
+          })  
+          ->whereNotIn('graduado.grad_estado', [3,5])
+          ->first();
+        }
 
         $str_sede_descripcion = URAWebsite_Sede::select('sedes.nombre')->where('idSGA_PREG',$item->sed_id)->first();
         $str_escuela_descripcion = URAWebsite_Escuela::select('escuelas.nombre')->where('idSGA_PREG',$item->dep_id)->first();
@@ -148,7 +163,20 @@ class EgresadoController extends Controller
       // SUV
       foreach ($egresados_SUV as $key => $item){
 
-        $item_bachiller = TramiteURA::select('tramite.idTipo_tramite_unidad','tramite.idEstado_tramite','cronograma_carpeta.fecha_colacion')->join('usuario','usuario.idUsuario','tramite.idUsuario')->join('programa','programa.idPrograma','tramite.idPrograma')->join('tramite_detalle','tramite_detalle.idTramite_detalle','tramite.idTramite_detalle')->join('cronograma_carpeta','tramite_detalle.idCronograma_carpeta','cronograma_carpeta.idCronograma_carpeta')->where('usuario.nro_documento',$item->per_dni)->where('programa.idSUV_PREG',$item->idestructura)->where('tramite.idTipo_tramite_unidad',15)->whereIn('tramite.idEstado_tramite',[15,44])->first();
+        if($val_anio_periodo >= 2023){
+          $item_bachiller = TramiteURA::select('cronograma_carpeta.fecha_colacion')->join('tramite_detalle','tramite_detalle.idTramite_detalle','tramite.idTramite_detalle')->join('cronograma_carpeta','tramite_detalle.idCronograma_carpeta','cronograma_carpeta.idCronograma_carpeta')->where('tramite.nro_matricula',$item->idalumno)->where('tramite.idTipo_tramite_unidad',15)->whereIn('tramite.idEstado_tramite',[15,44])->first();
+        }
+        else{
+          $item_bachiller = GraduadoDIPLOMASAPP::select('graduado.fec_expe_d as fecha_colacion')
+          ->where('graduado.cod_alumno', $item->idalumno)
+          ->where(function($query)
+          {
+              $query->where('graduado.tipo_ficha',1)
+              ->orWhere('graduado.tipo_ficha',7);
+          })  
+          ->whereNotIn('graduado.grad_estado', [3,5])
+          ->first();
+        }
 
         $str_sede_descripcion = URAWebsite_Sede::select('sedes.nombre')->where('idSUV_PREG',$item->idsede)->first();
         $str_escuela_descripcion = URAWebsite_Escuela::select('escuelas.nombre')->where('idSUV_PREG',$item->idestructura)->first();
@@ -168,14 +196,16 @@ class EgresadoController extends Controller
           'telefono' => ($item->per_telefono),
           'bachiller' => $item_bachiller ? 1 : 0,
           'fecha_bachiller' => $item_bachiller ? $item_bachiller->fecha_colacion : "",
-          'condicion' => ($item->con_id == 6 ? "EGRESADO" : "ALUMNO")
+          'condicion' => ($item->alu_estado == 6 ? "EGRESADO" : "ALUMNO")
           
           ]); 
 
       }
 
       } // Fin validacion de inputs
-
+      else{
+        $egresados = [];
+      }
       // RESPONSE CONSULTA
       return response()->json($egresados, 200);
 
