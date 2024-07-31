@@ -42,6 +42,7 @@ class EgresadoController extends Controller
     } 
 
 
+    //
     public function getEgresados($anio_periodo, $idprograma){
       $collec_programa = URAWebsite_Escuela::where('idEscuela',$idprograma)->first();
       $val_anio_periodo = intval($anio_periodo);
