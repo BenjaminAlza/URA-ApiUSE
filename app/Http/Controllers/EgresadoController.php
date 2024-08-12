@@ -89,7 +89,7 @@ class EgresadoController extends Controller
 
       // consulta
       $egresados_SUV = AlumnoSUV::select('sistema.persona.per_nombres','sistema.persona.per_apepaterno','sistema.persona.per_apematerno','sistema.persona.per_dni', 'alumno.idalumno','alumno.idsede','patrimonio.sede.sed_descripcion','sistema.persona.per_email','sistema.persona.per_email_institucional','sistema.persona.per_celular','sistema.persona.per_telefono', 'patrimonio.estructura.idestructura',
-      'patrimonio.estructura.estr_descripcion', 'matriculas.curricula.curr_mencion', 'matriculas.alumno.alu_estado', DB::raw('SUBSTRING(matriculas.matricula.mat_periodo,1,4) as anio_egreso,  SUBSTRING(planificacion.periodo.idperiodo, 1, 10) as fecha_egreso'), 'matriculas.matricula.mat_periodo as periodo_egreso')
+      'patrimonio.estructura.estr_descripcion', 'matriculas.curricula.curr_mencion', 'matriculas.alumno.alu_estado', DB::raw('SUBSTRING(matriculas.matricula.mat_periodo,1,4) as anio_egreso,  (planificacion.periodo.fecha_fin) as fecha_egreso'), 'matriculas.matricula.mat_periodo as periodo_egreso')
       ->joinSub($subq_SUV, 'subq_SUV', 
       function($join){
         $join->on('subq_SUV.idalumno', '=', 'alumno.idalumno');
