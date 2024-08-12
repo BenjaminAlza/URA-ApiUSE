@@ -16,7 +16,7 @@ use App\Models\MatriculaSGA;
 use App\Models\URAWebsite_Escuela;
 use App\Models\URAWebsite_Periodo;
 use App\Models\URAWebsite_Sede;
-
+use PhpParser\Node\Stmt\Else_;
 
 class EgresadoController extends Controller
 {
@@ -89,12 +89,13 @@ class EgresadoController extends Controller
 
       // consulta
       $egresados_SUV = AlumnoSUV::select('sistema.persona.per_nombres','sistema.persona.per_apepaterno','sistema.persona.per_apematerno','sistema.persona.per_dni', 'alumno.idalumno','alumno.idsede','patrimonio.sede.sed_descripcion','sistema.persona.per_email','sistema.persona.per_email_institucional','sistema.persona.per_celular','sistema.persona.per_telefono', 'patrimonio.estructura.idestructura',
-      'patrimonio.estructura.estr_descripcion', 'matriculas.alumno.alu_estado', DB::raw('SUBSTRING(matriculas.matricula.mat_periodo,1,4) as anio_egreso,  SUBSTRING(planificacion.periodo.idperiodo, 1, 10) as fecha_egreso'), 'matriculas.matricula.mat_periodo as periodo_egreso')
+      'patrimonio.estructura.estr_descripcion', 'matriculas.curricula.curr_mencion', 'matriculas.alumno.alu_estado', DB::raw('SUBSTRING(matriculas.matricula.mat_periodo,1,4) as anio_egreso,  SUBSTRING(planificacion.periodo.idperiodo, 1, 10) as fecha_egreso'), 'matriculas.matricula.mat_periodo as periodo_egreso')
       ->joinSub($subq_SUV, 'subq_SUV', 
       function($join){
         $join->on('subq_SUV.idalumno', '=', 'alumno.idalumno');
       })
       ->join('matriculas.matricula','subq_SUV.maxima_matricula','matriculas.matricula.idmatricula')
+      ->join('matriculas.curricula','matriculas.alumno.alu_curricula','matriculas.curricula.idcurricula')
       ->join('planificacion.periodo','matriculas.matricula.mat_periodo','planificacion.periodo.idperiodo')
       ->join('sistema.persona','sistema.persona.idpersona','matriculas.alumno.idpersona')
       ->join('patrimonio.area','patrimonio.area.idarea','matriculas.alumno.idarea')
@@ -221,7 +222,14 @@ class EgresadoController extends Controller
         }
 
         $str_sede_descripcion = URAWebsite_Sede::select('sedes.nombre')->where('idSUV_PREG',$item->idsede)->first();
-        $str_escuela_descripcion = URAWebsite_Escuela::select('escuelas.nombre')->where('idSUV_PREG',$item->idestructura)->first();
+        if($item->idestructura!=94)
+        {
+          $str_escuela_descripcion = URAWebsite_Escuela::select('escuelas.nombre')->where('idSUV_PREG',$item->idestructura)->first();
+        }
+        else{
+          $str_escuela_descripcion = URAWebsite_Escuela::select('escuelas.nombre')->where('idMencionSUV_PREG',$item->curr_mencion)->first();
+        }
+        
 
         $egresados->push(
           [
