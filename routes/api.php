@@ -23,3 +23,11 @@ Route::get('/anios_periodos', 'EgresadoController@getAnios_Periodos');
 Route::get('/programas', 'EgresadoController@getProgramas');
 Route::get('/egresados/{anio_periodo}/{idprograma}', 'EgresadoController@getEgresados');
 
+
+Route::group(['middleware' => 'UDAToken'], function () {
+    Route::get('/segundaEspecialidad', 'SegEspecialidadController@getSegEspecialidad');
+    Route::get('/docentes', 'SegEspecialidadController@getDocentes');
+});
+// Route::get('/segundaEspecialidad', 'SegEspecialidadController@getSegEspecialidad');
+// Route::get('/docentes', 'SegEspecialidadController@getDocentes');
+
