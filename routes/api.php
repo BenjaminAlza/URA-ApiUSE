@@ -17,13 +17,21 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::get('/index', 'EgresadoController@index');
+
+// EGRESADOS
 Route::get('/periodos', 'EgresadoController@getPeriodos');
 Route::get('/anios_periodos', 'EgresadoController@getAnios_Periodos');
 Route::get('/programas', 'EgresadoController@getProgramas');
+
+Route::get('/egresados/index', 'EgresadoController@index');
 Route::get('/egresados/{anio_periodo}/{idprograma}', 'EgresadoController@getEgresados');
 
+// MATRICULAS
+Route::get('/matriculados/index', 'MatriculasController@index');
+Route::get('/matriculados/{anio_periodo}/{idprograma}/{ciclo}', 'MatriculasController@getMatriculados');
 
+
+// -- TOKENS --
 Route::group(['middleware' => 'UDAToken'], function () {
     Route::get('/segundaEspecialidad', 'SegEspecialidadController@getSegEspecialidad');
     Route::get('/docentes', 'SegEspecialidadController@getDocentes');

@@ -21,7 +21,7 @@ use PhpParser\Node\Stmt\Else_;
 class EgresadoController extends Controller
 {
     public function index(){
-        return "Hola API-USE ...";
+        return "Hola API-USE - Controlador de EGRESADOS";
     }
 
     //
@@ -80,7 +80,7 @@ class EgresadoController extends Controller
           $query->where('escuela.dep_id','=', $collec_programa->idSGA_PREG);
         }
       })
-      ->where('sga_datos_alumno.con_id',6)
+      ->where('sga_datos_alumno.con_id', 6)
       ->get();
 
 
@@ -162,6 +162,7 @@ class EgresadoController extends Controller
           'fecha_egreso' => ($item->fecha_egreso),
           'sede' =>  $str_sede_descripcion? $str_sede_descripcion->nombre : "",
           'escuela' => $str_escuela_descripcion? $str_escuela_descripcion->nombre : "",
+          'codigo' => strval($item->per_login),
           'nro_documento' => ($item->per_dni),
           'apellidos' => ($item->per_apellidos),
           'nombres' => ($item->per_nombres),
@@ -238,6 +239,7 @@ class EgresadoController extends Controller
           'fecha_egreso' => ($item->fecha_egreso),
           'sede' => $str_sede_descripcion? $str_sede_descripcion->nombre : "",
           'escuela' => $str_escuela_descripcion? $str_escuela_descripcion->nombre : "",
+          'codigo' => strval($item->idalumno),
           'nro_documento' => ($item->per_dni),
           'apellidos' => ($item->per_apepaterno.' '.$item->per_apematerno),
           'nombres' => ($item->per_nombres),
